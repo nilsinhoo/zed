@@ -2,11 +2,13 @@ import open3d as o3d
 import numpy as np
 import pyzed.sl as sl
 import argparse
+import os
+
+OUTPUT_DIR = "ply"
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--reference", action="store_true")
+parser.add_argument("--filename", type=str, default="pointcloud.ply")
 args = parser.parse_args()
-
 
 zed = sl.Camera()
 init_params = sl.InitParameters()
@@ -51,14 +53,11 @@ pcd.points = o3d.utility.Vector3dVector(points)
 pcd = pcd.voxel_down_sample(voxel_size=0.03)
 # pcd.paint_uniform_color([0.7,0.7,0.7])
 
-if args.reference:
-    print("saving to reference")
-    o3d.io.write_point_cloud("reference.ply", pcd)
-else:
-    print("saving to current")
-    o3d.io.write_point_cloud("current.ply", pcd)
+path = os.path.join(OUTPUT_DIR, args.filename)
+print(f"saving to {path}")
+o3d.io.write_point_cloud(path, pcd)
 
-o3d.visualization.draw_geometries(
-    [pcd],
-    window_name="Punktwolke"
-)
+# o3d.visualization.draw_geometries(
+#     [pcd],
+#     window_name="Punktwolke"
+# )

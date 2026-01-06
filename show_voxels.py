@@ -12,9 +12,16 @@ INPUT_DIR = "ply"
 
 # 1) Laden
 pcd = o3d.io.read_point_cloud(os.path.join(INPUT_DIR, args.filename))
-print(pcd, pcd.has_colors())
+print(pcd)
+
+# 2) VoxelGrid erstellen
+voxel_size = 0.05
+vg = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size)
+
+num_voxels = len(vg.get_voxels())
+print(f"VoxelGrid with {num_voxels} voxels.")
 
 o3d.visualization.draw_geometries(
-    [pcd],
+    [vg],
     window_name="Punktwolke"
 )
