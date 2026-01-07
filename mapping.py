@@ -10,11 +10,13 @@ import copy
 # args = parser.parse_args()
 # filename = args.filename
 
-filename_source = "cropped_nils_stehend.ply"
-# filename_source = "cropped_mit_nils.ply"
+# filename_source = "cropped_nils_stehend.ply"
+filename_source = "cropped_mit_nils.ply"
 filename_target = "merged_3.ply"
 
 INPUT_DIR = "ply"
+
+voxel_size = 0.05
 
 def preprocess(pcd, voxel_size):
     # Downsampling
@@ -57,6 +59,12 @@ def draw_clusters(target, clusters):
 
     o3d.visualization.draw_geometries(pcds, window_name="Cluster")
 
+def save_pointcloud(pcd, filename, voxel_size=voxel_size):
+    pcd_out = copy.deepcopy(pcd)
+    pcd_out.voxel_down_sample(voxel_size)
+
+    o3d.io.write_point_cloud(os.path.join(INPUT_DIR, filename), pcd_out)
+
 # 1) Laden
 pcd_source = o3d.io.read_point_cloud(os.path.join(INPUT_DIR, filename_source))
 pcd_target = o3d.io.read_point_cloud(os.path.join(INPUT_DIR, filename_target))
@@ -65,13 +73,14 @@ print("Source Pointcloud:", pcd_source)
 print("Target Pointcloud:", pcd_target)
 
 # 2) Vorverarbeitung
-voxel_size = 0.05
 
 pcd_source_down, pcd_source_fpfh = preprocess(pcd_source, voxel_size)
 pcd_target_down, pcd_target_fpfh = preprocess(pcd_target, voxel_size)
 
 print("Source Pointcloud Downsampled:", pcd_source_down)
 print("Target Pointcloud Downsampled:", pcd_target_down)
+
+save_pointcloud(pcd_target_down, "pcd_target.ply")
 
 # 3) Globale Registrierung
 print("Globale Registrierung")
@@ -119,6 +128,7 @@ pcd_source_down_transformed_local.transform(result_icp.transformation)
 
 # Visualisieren
 draw_geometries(pcd_source_down_transformed_local, pcd_target_down, window_name="Lokale Registrierung")
+save_pointcloud(pcd_source_down_transformed_local, "pcd_registrated.ply")
 
 # 6) Differenz-Punktwolke bilden
 
@@ -135,6 +145,7 @@ pcd_source_diff = pcd_source_down_transformed_local.select_by_index(idx_new)
 
 # 7) Differenz visualisieren
 draw_geometries(pcd_target_down, pcd_source_diff, window_name="Differenz")
+save_pointcloud(pcd_source_diff, "pcd_difference.ply")
 
 # 8) Clustern
 labels = np.array(
